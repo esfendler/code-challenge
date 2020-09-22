@@ -28,9 +28,12 @@
               <th>Tag</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="table-body">
           </tbody>
         </table>
+      </div>
+      <div id="error" style="display:none" class="alert alert-danger mt-3">
+        <span id="error-message"></span>
       </div>
     </div>
   </div>
@@ -41,5 +44,34 @@
   <script type="text/javascript">
     /* TODO: Flesh this out to connect the form to the API and render results
     in the #address-results div. */
+    $(".form").submit(function(event) {
+      event.preventDefault();
+      const formInput = $(this).serialize();
+      $.get("/api/parse/?" + formInput, function(data, status){
+        $("#address-results").hide();
+        $("#error").hide();
+
+        $("#table-body").empty();
+        $("#error-message").text("");
+        $("#parse-type").text("");
+
+        if (data["error"]) {
+          $("#error-message").text(data["error"]);
+          $("#error").show();
+          return
+        }
+
+        const addressComponents = data["address_components"];
+        const addressType = data["address_type"];
+        $("#parse-type").text(addressType);
+
+        let tableHTML = "";
+        $.each(addressComponents, (tag, addressPart) => {
+          tableHTML += "<tr><td>" + addressPart + "</td><td>" + tag + "</td></tr>"
+        })
+        $('#table-body').append(tableHTML);
+        $("#address-results").show();
+      });
+    });
   </script>
 {% endblock %}
